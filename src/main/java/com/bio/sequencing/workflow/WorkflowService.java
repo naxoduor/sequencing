@@ -2,9 +2,12 @@ package com.bio.sequencing.workflow;
 
 import com.bio.sequencing.port.Port;
 import com.bio.sequencing.workers.BioconductorWorker;
+import com.bio.sequencing.workers.FastaReaderWorker;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 @Service
 public class WorkflowService {
@@ -57,13 +60,13 @@ public class WorkflowService {
     private Worker createWorker(
             NodeSchema node) {
 
-        return switch (node.getType()) {
+        return (Worker) switch (node.getType()) {
 
             case "SequenceReader" ->
-                    new SequenceReaderWorker();
+                    new FastaReaderWorker(new Port());
 
             case "BioconductorWorker" ->
-                    new BioconductorWorker();
+                    new BioconductorWorker("id", null, null);
 
             default ->
                     throw new IllegalArgumentException(
@@ -85,10 +88,10 @@ public class WorkflowService {
         Port input =
                 target.getInputPort(targetPort);
 
-        CommunicationChannel channel =
-                new CommunicationChannel();
-
-        output.setChannel(channel);
-        input.setChannel(channel);
+//        CommunicationChannel channel =
+//                new CommunicationChannel();
+//
+//        output.setChannel(channel);
+//        input.setChannel(channel);
     }
 }

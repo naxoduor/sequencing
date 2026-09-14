@@ -1,7 +1,7 @@
 package com.bio.sequencing.uploads;
 
-import lombok.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.OutputStream;

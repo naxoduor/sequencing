@@ -11,18 +11,22 @@ import java.util.Map;
 
 public class BioconductorWorker {
 
-    private final Port input;
+    private Port input;
 
-    private final Port output;
+    private Port output;
 
-    private final WorkflowEventPublisher eventPublisher;
+    private WorkflowEventPublisher eventPublisher;
 
-    private final String workflowId;
+    private String workflowId;
 
-    private final String nodeId;
+    private String nodeId;
 
 
     private RConnection rConnection;
+
+//    public BioconductorWorker(String workflowId){
+//        this.workflowId = workflowId;
+//    }
 
     public BioconductorWorker(String workflowId,
                               String nodeId,
@@ -35,6 +39,9 @@ public class BioconductorWorker {
         this.eventPublisher = eventPublisher1;
         this.workflowId = workflowId1;
         this.nodeId = nodeId1;
+    }
+
+    public BioconductorWorker(String id, Object nodeId, Object input) {
     }
 
     /**
@@ -68,7 +75,8 @@ public class BioconductorWorker {
      */
     public void tick() {
 
-        AnalysisRequest request = input.receive();
+//        AnalysisRequest request = input.receive();
+        String request = input.get().toString();
 
         if (request == null) {
             return;
@@ -95,7 +103,7 @@ public class BioconductorWorker {
         } catch (Exception e) {
 
             result = AnalysisResult.failed(
-                    request.getJobId(),
+                    request,
                     e.getMessage()
             );
 
@@ -107,16 +115,19 @@ public class BioconductorWorker {
 
         }
 
-        output.send(result);
+        output.put(result);
     }
 
     /**
      * Execute a Bioconductor operation using R.
      */
     private AnalysisResult executeBioconductor(
-            AnalysisRequest request) {
+            String request) {
 
-        String jobId = request.getJobId();
+//        String jobId = request.getJobId();
+        String jobId = request;
+
+
 
         AnalysisResult result =
                 AnalysisResult.running(jobId);
@@ -132,8 +143,9 @@ public class BioconductorWorker {
             /*
              * 1. Load Bioconductor package
              */
-            String packageName =
-                    request.getPackageName();
+//            String packageName =
+//                    request.getPackageName();
+            String packageName = request;
 
             String loadPackage =
                     "library(" +
@@ -146,7 +158,7 @@ public class BioconductorWorker {
              * 2. Build the R operation.
              */
             String expression =
-                    buildExpression(request);
+                    buildExpression(new AnalysisRequest(request, null, null));
 
             /*
              * 3. Execute the operation.
@@ -171,12 +183,12 @@ public class BioconductorWorker {
 
             result.getResults().put(
                     "operation",
-                    request.getOperation()
+                    request
             );
 
             result.getResults().put(
                     "package",
-                    request.getPackageName()
+                    request
             );
 
             result.setStatus(

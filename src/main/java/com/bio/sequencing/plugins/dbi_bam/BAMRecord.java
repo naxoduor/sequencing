@@ -39,4 +39,4 @@ public record BAMRecord(
     public boolean isSupplementary() {
         return (flags & 0x800) != 0;
     }
-}}
+}

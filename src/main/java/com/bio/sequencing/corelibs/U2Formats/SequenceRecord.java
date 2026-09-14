@@ -1,6 +1,6 @@
 package com.bio.sequencing.corelibs.U2Formats;
 
-public static final class SequenceRecord {
+public final class SequenceRecord {
 
     private final String id;
     private final String sequence;

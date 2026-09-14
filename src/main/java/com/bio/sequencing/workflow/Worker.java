@@ -1,12 +1,14 @@
 package com.bio.sequencing.workflow;
 
+import com.bio.sequencing.port.Port;
+
 public interface Worker {
 
     void init();
 
     void tick();
 
-    InputPort getInputPort(String id);
+    Port getInputPort(String id);
 
-    OutputPort getOutputPort(String id);
+    Port getOutputPort(String id);
 }
