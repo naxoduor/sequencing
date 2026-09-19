@@ -1,8 +1,7 @@
 package com.bio.sequencing.port;
 
-import com.bio.sequencing.models.AnalysisRequest;
-
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Port {
 
@@ -13,7 +12,7 @@ public class Port {
     }
 
     public Port(){
-
+        this(new ConcurrentLinkedQueue<>());
     }
 
     public void put(Object data) {
@@ -24,10 +23,17 @@ public class Port {
         return queue.poll();
     }
 
+
+    public Queue<Object> getQueue(){
+        return queue;
+    }
+
+    public void setQueue(Queue<Object> queue) {
+        this.queue = queue;
+    }
+
     public boolean hasData() {
         return !queue.isEmpty();
     }
-
-
 
 }

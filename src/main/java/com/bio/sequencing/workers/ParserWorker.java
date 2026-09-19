@@ -31,7 +31,7 @@ public class ParserWorker implements Worker {
                 (Sequence) input.get();
 
         System.out.println(
-                "Parsing: " + sequence.getId()
+                "Parsing: " + sequence.getData()
         );
 
         output.put(sequence);

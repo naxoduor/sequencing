@@ -10,17 +10,19 @@ import com.bio.sequencing.workflow.WorkflowGraph;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Component
 public class MyScheduledTask {
 
-    @Scheduled(fixedRate = 60_000)
+    @Scheduled(fixedRate = 10_000)
     public void executeEveryMinute() {
         // business logic
-        Queue<Object> channel1 = new LinkedList<>();
-        Queue<Object> channel2 = new LinkedList<>();
+        Queue<Object> channel1 = new ConcurrentLinkedQueue<>();
+        Queue<Object> channel2 = new ConcurrentLinkedQueue<>();
 
         Port readerOutput = new Port(channel1);
         Port parserInput = new Port(channel1);
@@ -29,7 +31,7 @@ public class MyScheduledTask {
         Port alignerInput = new Port(channel2);
 
         FastaReaderWorker reader =
-                new FastaReaderWorker(readerOutput);
+                new FastaReaderWorker(Path.of("/home/maradona/Downloads/check.fasta"), readerOutput);
 
         ParserWorker parser =
                 new ParserWorker(
