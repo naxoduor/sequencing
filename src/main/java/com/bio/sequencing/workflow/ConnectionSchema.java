@@ -51,4 +51,15 @@ public class ConnectionSchema {
     public void setTargetPort(String targetPort) {
         this.targetPort = targetPort;
     }
+
+    @Override
+    public String toString() {
+        return "ConnectionSchema{" +
+                "id='" + id + '\'' +
+                ", sourceNode='" + sourceNode + '\'' +
+                ", sourcePort='" + sourcePort + '\'' +
+                ", targetNode='" + targetNode + '\'' +
+                ", targetPort='" + targetPort + '\'' +
+                '}';
+    }
 }

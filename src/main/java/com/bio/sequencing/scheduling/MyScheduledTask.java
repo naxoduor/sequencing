@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Component
 public class MyScheduledTask {
 
-    @Scheduled(fixedRate = 10_000)
+//    @Scheduled(fixedRate = 10_000)
     public void executeEveryMinute() {
         // business logic
         Queue<Object> channel1 = new ConcurrentLinkedQueue<>();

@@ -9,7 +9,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 
 import java.util.Map;
 
-public class BioconductorWorker {
+public class BioconductorWorker implements Worker{
 
     private Port input;
 
@@ -27,6 +27,11 @@ public class BioconductorWorker {
 //    public BioconductorWorker(String workflowId){
 //        this.workflowId = workflowId;
 //    }
+
+    public BioconductorWorker(Port input, Port output){
+        this.input = input;
+        this.output = output;
+    }
 
     public BioconductorWorker(String workflowId,
                               String nodeId,
@@ -116,6 +121,11 @@ public class BioconductorWorker {
         }
 
         output.put(result);
+    }
+
+    @Override
+    public boolean isDone() {
+        return false;
     }
 
     /**

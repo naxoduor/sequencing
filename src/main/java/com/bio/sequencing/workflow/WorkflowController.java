@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.CompletableFuture;
+
 @RestController
 @RequestMapping("/api/workflows")
 public class WorkflowController {
@@ -18,9 +20,11 @@ public class WorkflowController {
     }
 
     @PostMapping
-    public WorkflowResponse createWorkflow(
+    public CompletableFuture<WorkflowResponse> createWorkflow(
             @RequestBody WorkflowSchema schema) {
-
+        System.out.println("Print the schema");
+        System.out.println(schema.getConnections());
+        System.out.println(schema.getNodes());
         return workflowService.create(schema);
     }
 }

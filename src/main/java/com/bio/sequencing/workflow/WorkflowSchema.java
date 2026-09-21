@@ -27,4 +27,12 @@ public class WorkflowSchema {
 
         this.connections = connections;
     }
+
+    @Override
+    public String toString() {
+        return "WorkflowSchema{" +
+                "nodes=" + nodes +
+                ", connections=" + connections +
+                '}';
+    }
 }

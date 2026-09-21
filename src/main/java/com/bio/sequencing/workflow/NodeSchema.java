@@ -44,4 +44,14 @@ public class NodeSchema {
     public void setOutputs(List<PortSchema> outputs) {
         this.outputs = outputs;
     }
+
+    @Override
+    public String toString() {
+        return "NodeSchema{" +
+                "id='" + id + '\'' +
+                ", type='" + type + '\'' +
+                ", inputs=" + inputs +
+                ", outputs=" + outputs +
+                '}';
+    }
 }

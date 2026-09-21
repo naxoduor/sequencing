@@ -1,17 +1,16 @@
 package com.bio.sequencing.workflow;
 
 import com.bio.sequencing.port.Port;
-import com.bio.sequencing.workers.Actor;
-import com.bio.sequencing.workers.AlignerWorker;
-import com.bio.sequencing.workers.FastaReaderWorker;
-import com.bio.sequencing.workers.ParserWorker;
+import com.bio.sequencing.workers.*;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Service
@@ -19,7 +18,8 @@ public class WorkflowService {
 
 
 
-    public WorkflowResponse create(
+        @Async
+        public CompletableFuture<WorkflowResponse> create(
             WorkflowSchema schema) {
 
         WorkflowGraph graph = createGraph(schema);
@@ -29,9 +29,8 @@ public class WorkflowService {
 
         executor.execute();
 
-        return new WorkflowResponse(
-                "created"
-        );
+        return CompletableFuture.completedFuture(
+                new WorkflowResponse("created"));
     }
 
     public WorkflowGraph createGraph(
@@ -43,8 +42,12 @@ public class WorkflowService {
         for (NodeSchema node : schema.getNodes()) {
             portsByNode.put(node.getId(), createPorts(node));
         }
+        portsByNode.keySet().forEach(System.out::println);
+        portsByNode.values().forEach(System.out::println);
 
         for (ConnectionSchema connection : schema.getConnections()) {
+            System.out.println("inside connections");
+            System.out.println(connection.getSourceNode());
             NodePorts source = requireNodePorts(
                     portsByNode, connection.getSourceNode());
             NodePorts target = requireNodePorts(
@@ -54,6 +57,8 @@ public class WorkflowService {
             source.output(connection.getSourcePort()).setQueue(channel);
             target.input(connection.getTargetPort()).setQueue(channel);
         }
+        portsByNode.keySet().forEach(System.out::println);
+        portsByNode.values().forEach(System.out::println);
 
         Map<String, com.bio.sequencing.workers.Worker> workers =
                 new HashMap<>();
@@ -81,11 +86,14 @@ public class WorkflowService {
                             Path.of("/home/maradona/Downloads/check.fasta"),
                             ports.firstOutput());
 
-            case "ParserWorker" ->
+            case "PasserWorker" ->
                     new ParserWorker(ports.firstInput(), ports.firstOutput());
 
-            case "AlignerWorker" ->
+            case "AllignmentWorker" ->
                     new AlignerWorker(ports.firstInput(), ports.firstOutput());
+
+            case "BioconductorWorker" ->
+                new BioconductorWorker(ports.firstInput(), ports.firstOutput());
 
             default ->
                     throw new IllegalArgumentException(
@@ -103,6 +111,7 @@ public class WorkflowService {
 
         private Map<String, Port> createPorts(List<PortSchema> schemas) {
                 Map<String, Port> ports = new HashMap<>();
+            System.out.println(schemas);
                 for (int index = 0; index < schemas.size(); index++) {
                         PortSchema schema = schemas.get(index);
                         Port port = new Port(new ConcurrentLinkedQueue<>());

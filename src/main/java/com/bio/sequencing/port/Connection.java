@@ -11,5 +11,6 @@ public class Connection {
 
         this.source = source;
         this.destination = destination;
+        destination.setQueue(source.getQueue());
     }
 }
