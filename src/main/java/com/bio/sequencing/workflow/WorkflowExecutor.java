@@ -2,6 +2,7 @@ package com.bio.sequencing.workflow;
 
 import com.bio.sequencing.workers.Actor;
 import com.bio.sequencing.workers.Worker;
+import lombok.SneakyThrows;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,16 +32,32 @@ public class WorkflowExecutor {
         );
 
         try {
-            List<Future<?>> futures = new ArrayList<>();
-
             for (Actor actor : graph.getActors()) {
-                futures.add(executor.submit(() -> runWorker(actor.getWorker())));
+                actor.getWorker().init();
             }
 
+            boolean hasPendingWork;
+            do {
+                List<Future<?>> futures = new ArrayList<>();
+                hasPendingWork = false;
 
-            for (Future<?> future : futures) {
-                future.get();
-            }
+                for (Actor actor : graph.getActors()) {
+                    if (!actor.getWorker().isDone()) {
+                        hasPendingWork = true;
+                        futures.add(executor.submit(() -> {
+                            try {
+                                actor.getWorker().tick();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }));
+                    }
+                }
+
+                for (Future<?> future : futures) {
+                    future.get();
+                }
+            } while (hasPendingWork);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Workflow execution was interrupted", exception);
@@ -49,14 +66,6 @@ public class WorkflowExecutor {
         } finally {
             executor.shutdownNow();
 //            executor.close();
-        }
-    }
-
-    private void runWorker(Worker worker) {
-        worker.init();
-
-        while (!worker.isDone()) {
-            worker.tick();
         }
     }
 }

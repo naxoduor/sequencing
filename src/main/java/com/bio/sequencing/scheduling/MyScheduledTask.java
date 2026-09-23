@@ -2,12 +2,11 @@ package com.bio.sequencing.scheduling;
 
 import com.bio.sequencing.port.Port;
 import com.bio.sequencing.workers.Actor;
-import com.bio.sequencing.workers.AlignerWorker;
+import com.bio.sequencing.workers.MAFFTWorker;
 import com.bio.sequencing.workers.FastaReaderWorker;
 import com.bio.sequencing.workers.ParserWorker;
 import com.bio.sequencing.workflow.WorkflowExecutor;
 import com.bio.sequencing.workflow.WorkflowGraph;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -38,8 +37,8 @@ public class MyScheduledTask {
                         parserInput,
                         parserOutput);
 
-        AlignerWorker aligner =
-                new AlignerWorker(
+        MAFFTWorker aligner =
+                new MAFFTWorker(
                         alignerInput,
                         new Port(new LinkedList<>()));
 

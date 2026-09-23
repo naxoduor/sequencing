@@ -16,8 +16,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Service
 public class WorkflowService {
 
-
-
         @Async
         public CompletableFuture<WorkflowResponse> create(
             WorkflowSchema schema) {
@@ -86,14 +84,23 @@ public class WorkflowService {
                             Path.of("/home/maradona/Downloads/check.fasta"),
                             ports.firstOutput());
 
-            case "PasserWorker" ->
-                    new ParserWorker(ports.firstInput(), ports.firstOutput());
+            case "MAFFTWorker" ->
+                    new MAFFTWorker(ports.firstInput(), ports.firstOutput());
 
-            case "AllignmentWorker" ->
-                    new AlignerWorker(ports.firstInput(), ports.firstOutput());
+            case "ClustalOWorker" ->
+                    new ClustalOWorker(ports.firstInput(), ports.firstOutput());
+
+            case "ClustalWWorker" ->
+                new ClustalWWorker(ports.firstInput(), ports.firstOutput());
+
+            case "KalignWorker" ->
+                new KalignWorker(ports.firstInput(), ports.firstOutput());
 
             case "BioconductorWorker" ->
                 new BioconductorWorker(ports.firstInput(), ports.firstOutput());
+
+            case "FileWriterWorker" ->
+                         new FileWriterWorker(Path.of("/home/maradona/Downloads/checktwo.fasta"), ports.firstInput());
 
             default ->
                     throw new IllegalArgumentException(

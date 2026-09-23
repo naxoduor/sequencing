@@ -4,7 +4,7 @@ public interface Worker {
 
     void init();
 
-    void tick();
+    void tick() throws Exception;
 
     boolean isDone();
 }

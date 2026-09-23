@@ -103,13 +103,13 @@ public class FastaReaderWorker implements Worker {
                      * If we already have a sequence,
                      * the previous record is complete.
                      */
-                    if (currentId != null && currentSequence != null) {
+                        if (currentId != null && currentSequence != null
+                            && currentSequence.length() > 0) {
 
                         Sequence sequence = new Sequence(
                                 currentId,
                                 currentSequence.toString()
                         );
-                        System.out.println(sequence);
 
                         output.put(sequence);
 
@@ -119,6 +119,7 @@ public class FastaReaderWorker implements Worker {
                          */
                         currentId = line.substring(1).trim();
                         currentSequence = new StringBuilder();
+                        currentSequence.append(line).append(System.lineSeparator());
 
                         return;
                     }
@@ -126,6 +127,7 @@ public class FastaReaderWorker implements Worker {
                     // First FASTA record
                     currentId = line.substring(1).trim();
                     currentSequence = new StringBuilder();
+                    currentSequence.append(line).append(System.lineSeparator());
 
                 } else {
 
@@ -150,21 +152,22 @@ public class FastaReaderWorker implements Worker {
              * There may still be one final sequence
              * that has not yet been emitted.
              */
-            if (currentId != null && currentSequence != null) {
+//                if (currentId != null && currentSequence != null
+//                    && currentSequence.length() > 0) {
+//
+//                Sequence sequence = new Sequence(
+//                        currentId,
+//                        currentSequence.toString()
+//                );
+//
+//                output.put(sequence);
+//
+//                currentId = null;
+//                currentSequence = null;
+//            }
 
-                Sequence sequence = new Sequence(
-                        currentId,
-                        currentSequence.toString()
-                );
-
-                output.put(sequence);
-
-                currentId = null;
-                currentSequence = null;
-            }
-
+            output.close();
             done = true;
-
             close();
 
         } catch (IOException e) {

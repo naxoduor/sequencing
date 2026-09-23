@@ -5,7 +5,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Port {
 
+    private static final Object END_OF_STREAM = new Object();
+
     private Queue<Object> queue = null;
+    private boolean closed = false;
 
     public Port(Queue<Object> queue) {
         this.queue = queue;
@@ -20,7 +23,20 @@ public class Port {
     }
 
     public Object get() {
-        return queue.poll();
+        Object data = queue.poll();
+        if (data == END_OF_STREAM) {
+            closed = true;
+            return null;
+        }
+        return data;
+    }
+
+    public void close() {
+        queue.offer(END_OF_STREAM);
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 
 
