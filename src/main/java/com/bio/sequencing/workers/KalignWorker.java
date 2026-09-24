@@ -9,26 +9,14 @@ import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class KalignWorker implements Worker {
-
-    private final Port input;
-    private final Port output;
-
-    private Process process;
-    private BufferedWriter writer;
-    private BufferedReader reader;
-    private BufferedReader errorReader;
-
-    private boolean done = false;
+public class KalignWorker extends BaseWorker {
 
     public KalignWorker(
             Port input,
             Port output) {
 
-        this.input = input;
-        this.output = output;
+        super(input, output);
     }
 
     @Override
@@ -69,8 +57,7 @@ public class KalignWorker implements Worker {
             return;
         }
 
-        Sequence sequence =
-                (Sequence) input.get();
+        Sequence sequence = (Sequence) input.get();
 
         String result=align(sequence.getData());
         outputSequences(result);
@@ -85,72 +72,11 @@ public class KalignWorker implements Worker {
 
         done = true;
     }
-    public String align(String fasta) throws Exception {
-        System.out.println("mafft align");
-        if (process == null) {
-            throw new IllegalStateException("MAFFT worker has not been initialized");
-        }
-
-        // Write FASTA sequence to MAFFT stdin
-        BufferedWriter inputWriter = writer;
-        try (inputWriter) {
-            inputWriter.write(">sequence1");
-            inputWriter.newLine();
-            inputWriter.write(fasta);
-            inputWriter.newLine();
-            inputWriter.flush();
-        }
-
-        // Read aligned FASTA from stdout
-        String output;
-        try (BufferedReader outputReader = reader) {
-            output = outputReader.lines()
-                    .collect(Collectors.joining(System.lineSeparator()));
-        }
-        System.out.println("collected outpput");
-        System.out.println(output);
-
-        // Read MAFFT errors
-        String errors;
-        try (BufferedReader outputErrorReader = errorReader) {
-            errors = outputErrorReader.lines()
-                    .collect(Collectors.joining(System.lineSeparator()));
-        }
-
-        int exitCode = process.waitFor();
-
-        if (exitCode != 0) {
-            throw new RuntimeException(
-                    "MAFFT failed with exit code " + exitCode +
-                            ": " + errors
-            );
-        }
-
-        return output;
+    @Override
+    protected String alignmentInput(String fasta) {
+        return ">sequence1" + System.lineSeparator() + super.alignmentInput(fasta);
     }
 
-    private void outputSequences(String fasta) {
-        StringBuilder currentRecord = null;
-        String currentId = null;
-
-        for (String line : fasta.lines().toList()) {
-            if (line.startsWith(">")) {
-                if (currentRecord != null) {
-                    output.put(new Sequence(currentId, currentRecord.toString()));
-                }
-                currentId = line.substring(1).trim();
-                currentRecord = new StringBuilder();
-            }
-
-            if (currentRecord != null) {
-                currentRecord.append(line).append(System.lineSeparator());
-            }
-        }
-
-        if (currentRecord != null) {
-            output.put(new Sequence(currentId, currentRecord.toString()));
-        }
-    }
     @Override
     public boolean isDone() {
         return done;

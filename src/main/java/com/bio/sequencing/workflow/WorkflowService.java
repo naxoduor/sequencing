@@ -96,9 +96,7 @@ public class WorkflowService {
             case "KalignWorker" ->
                 new KalignWorker(ports.firstInput(), ports.firstOutput());
 
-            case "BioconductorWorker" ->
-                new BioconductorWorker(ports.firstInput(), ports.firstOutput());
-
+        
             case "FileWriterWorker" ->
                          new FileWriterWorker(Path.of("/home/maradona/Downloads/checktwo.fasta"), ports.firstInput());
 

@@ -20,9 +20,8 @@ import java.nio.file.Path;
  * >seq2
  * GGGCTTA
  */
-public class FastaReaderWorker implements Worker {
+public class FastaReaderWorker extends BaseWorker {
 
-    private final Port output;
     private final Path fastaFile;
 
     private BufferedReader reader;
@@ -34,8 +33,8 @@ public class FastaReaderWorker implements Worker {
     private boolean done = false;
 
     public FastaReaderWorker(Path fastaFile, Port output) {
+        super(null, output);
         this.fastaFile = fastaFile;
-        this.output = output;
     }
 
     @Override
