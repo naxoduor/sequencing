@@ -116,7 +116,7 @@ public class FastaReaderWorker extends BaseWorker {
                          * Save the new header so that the
                          * next tick() continues from here.
                          */
-                        currentId = line.substring(1).trim();
+
                         currentSequence = new StringBuilder();
                         currentSequence.append(line).append(System.lineSeparator());
 

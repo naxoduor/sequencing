@@ -52,26 +52,25 @@ public class KalignWorker extends BaseWorker {
 
     @Override
     public void tick() throws Exception {
-
-        if (!input.hasData()) {
+        Object inputData = input.get();
+        if (inputData == null) {
+            if (input.isClosed()) {
+                flush();
+                writer.close();
+                outputSequences();
+                System.out.println("Kalign aligned result");
+                output.close();
+                done = true;
+            }
             return;
         }
 
-        Sequence sequence = (Sequence) input.get();
+        Sequence sequence = (Sequence) inputData;
 
-        String result=align(sequence.getData());
-        outputSequences(result);
-
-        System.out.println(
-                "Kalign Aligning: " + sequence.getData()
-        );
-
-        Sequence resultSequence = new Sequence(sequence.getId(), result);
-
-        output.put(resultSequence);
-
-        done = true;
+        String fasta = sequenceData(sequence, "Kalign");
+        align(fasta);
     }
+
     @Override
     protected String alignmentInput(String fasta) {
         return ">sequence1" + System.lineSeparator() + super.alignmentInput(fasta);

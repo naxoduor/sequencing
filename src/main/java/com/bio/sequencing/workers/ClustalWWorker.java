@@ -12,7 +12,6 @@ import java.util.List;
 public class ClustalWWorker extends BaseWorker {
 
     private final StringBuilder pendingFasta = new StringBuilder();
-    private String firstSequenceId;
     public ClustalWWorker(
             Port input,
             Port output) {
@@ -36,7 +35,6 @@ public class ClustalWWorker extends BaseWorker {
                 "sh",
                 "-c",
                 "cat > /tmp/input.fasta && clustalw -INFILE=/tmp/input.fasta -OUTFILE=/dev/stdout -OUTPUT=FASTA -QUIET"
-
         );
 
 
@@ -56,19 +54,13 @@ public class ClustalWWorker extends BaseWorker {
 
     @Override
     public void tick() throws Exception {
-        if (done) {
-            return;
-        }
-
         Object inputData = input.get();
         if (inputData == null) {
-            if (input.isClosed() && pendingFasta.length() > 0) {
-                String fasta = pendingFasta.toString();
-                pendingFasta.setLength(0);
-                String result = align(fasta);
-                System.out.println("clustalw aligned");
-                System.out.println(result);
-                outputSequences(result);
+            if (input.isClosed()) {
+                flush();
+                writer.close();
+                outputSequences();
+                System.out.println("ClustalW aligned result");
                 output.close();
                 done = true;
             }
@@ -76,17 +68,10 @@ public class ClustalWWorker extends BaseWorker {
         }
 
         Sequence sequence = (Sequence) inputData;
-        System.out.println(sequence.getData());
-        String fasta = sequence.getData();
 
-        fasta = sequenceData(sequence, "Clustalw");
-
-        if (firstSequenceId == null) {
-            firstSequenceId = sequence.getId();
-        }
-        pendingFasta.append(fasta).append(System.lineSeparator());
+        String fasta = sequenceData(sequence, "ClustalW");
+        align(fasta);
     }
-
 
     @Override
     public boolean isDone() {

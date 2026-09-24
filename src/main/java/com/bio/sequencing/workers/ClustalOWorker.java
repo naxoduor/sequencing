@@ -12,7 +12,6 @@ import java.util.List;
 public class ClustalOWorker extends BaseWorker {
 
     private final StringBuilder pendingFasta = new StringBuilder();
-    private String firstSequenceId;
     public ClustalOWorker(
             Port input,
             Port output) {
@@ -56,11 +55,10 @@ public class ClustalOWorker extends BaseWorker {
     public void tick() throws Exception {
         Object inputData = input.get();
         if (inputData == null) {
-            if (input.isClosed() && pendingFasta.length() > 0) {
-                String result = align(pendingFasta.toString());
-                System.out.println("clustalo aligned result");
-                System.out.println(result);
-                outputSequences(result);
+            if (input.isClosed()) {
+                flush();
+                writer.close();
+                outputSequences();
                 output.close();
                 done = true;
             }
@@ -68,15 +66,9 @@ public class ClustalOWorker extends BaseWorker {
         }
 
         Sequence sequence = (Sequence) inputData;
-        System.out.println(sequence.getData());
-        String fasta = sequence.getData();
 
-        fasta = sequenceData(sequence, "ClustalO");
-
-        if (firstSequenceId == null) {
-            firstSequenceId = sequence.getId();
-        }
-        pendingFasta.append(fasta).append(System.lineSeparator());
+        String fasta = sequenceData(sequence, "MAFFT");
+        align(fasta);
     }
 
     @Override

@@ -54,11 +54,10 @@ public class MAFFTWorker extends BaseWorker {
     public void tick() throws Exception {
         Object inputData = input.get();
         if (inputData == null) {
-            if (input.isClosed() && pendingFasta.length() > 0) {
-                String result = align(pendingFasta.toString());
-                System.out.println("Mafft aligned result");
-                System.out.println(result);
-                outputSequences(result);
+            if (input.isClosed()) {
+                flush();
+                writer.close();
+                outputSequences();
                 output.close();
                 done = true;
             }
@@ -68,9 +67,9 @@ public class MAFFTWorker extends BaseWorker {
         Sequence sequence = (Sequence) inputData;
 
         String fasta = sequenceData(sequence, "MAFFT");
-
-        pendingFasta.append(fasta).append(System.lineSeparator());
+        align(fasta);
     }
+    
     @Override
     public boolean isDone() {
         return done;

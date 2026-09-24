@@ -5,6 +5,9 @@ import com.bio.sequencing.sequence.Sequence;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public abstract class BaseWorker implements Worker {
@@ -36,60 +39,66 @@ public abstract class BaseWorker implements Worker {
 		return data;
 	}
 
-	protected void outputSequences(String fasta) {
-		StringBuilder currentRecord = null;
-		String currentId = null;
-
-		for (String line : fasta.lines().toList()) {
-			if (line.startsWith(">")) {
-				if (currentRecord != null) {
-					output.put(new Sequence(currentId, currentRecord.toString()));
-				}
-				currentId = line.substring(1).trim();
-				currentRecord = new StringBuilder();
+	protected void outputSequences() throws IOException, InterruptedException {
+		CompletableFuture<String> errors = CompletableFuture.supplyAsync(() -> {
+			try (BufferedReader outputErrorReader = errorReader) {
+				return outputErrorReader.lines()
+						.collect(Collectors.joining(System.lineSeparator()));
+			} catch (IOException exception) {
+				throw new UncheckedIOException(exception);
 			}
+		});
+	
+		String currentId = null;
+		StringBuilder currentRecord = null;
+		try (BufferedReader outputReader = reader) {
+			String line;
+			while ((line = outputReader.readLine()) != null) {
+				if (line.startsWith(">")) {
 
-			if (currentRecord != null) {
-				currentRecord.append(line).append(System.lineSeparator());
+					if (currentRecord != null) {
+						Sequence resultSequence = new Sequence(currentId, currentRecord.toString());
+						System.out.println(resultSequence.getData());
+						output.put(resultSequence);
+					}
+					currentId = line.substring(1).trim();
+					currentRecord = new StringBuilder();
+				}
+
+				if (currentRecord != null) {
+					currentRecord.append(line).append(System.lineSeparator());
+				}
+
 			}
 		}
 
 		if (currentRecord != null) {
-			output.put(new Sequence(currentId, currentRecord.toString()));
+			Sequence resultSequence = new Sequence(currentId, currentRecord.toString());
+			System.out.println(resultSequence.getData());
+			output.put(resultSequence);
+		}
+
+		int exitCode = process.waitFor();
+		String errorOutput = errors.join();
+		if (exitCode != 0) {
+			System.out.println(errorOutput);
+			throw new RuntimeException(
+					getClass().getSimpleName() + " failed with exit code "
+							+ exitCode + ": " + errorOutput);
 		}
 	}
 
-	public String align(String fasta) throws Exception {
+	public void flush() throws IOException {
+		writer.flush();
+	}
+
+	public void align(String fasta) throws Exception {
 		if (process == null) {
 			throw new IllegalStateException(
 					getClass().getSimpleName() + " has not been initialized");
 		}
 
-		try (BufferedWriter inputWriter = writer) {
-			inputWriter.write(alignmentInput(fasta));
-			inputWriter.flush();
-		}
-
-		String output;
-		try (BufferedReader outputReader = reader) {
-			output = outputReader.lines()
-					.collect(Collectors.joining(System.lineSeparator()));
-		}
-
-		String errors;
-		try (BufferedReader outputErrorReader = errorReader) {
-			errors = outputErrorReader.lines()
-					.collect(Collectors.joining(System.lineSeparator()));
-		}
-
-		int exitCode = process.waitFor();
-		if (exitCode != 0) {
-			throw new RuntimeException(
-					getClass().getSimpleName() + " failed with exit code "
-							+ exitCode + ": " + errors);
-		}
-
-		return output;
+		writer.write(alignmentInput(fasta));
 	}
 
 	protected String alignmentInput(String fasta) {
