@@ -8,6 +8,7 @@ public class WorkflowEvent {
         WORKFLOW_STARTED,
         WORKER_STARTED,
         PORT_DATA,
+        FILE_READY,
         WORKER_COMPLETED,
         WORKER_FAILED,
         WORKFLOW_COMPLETED,

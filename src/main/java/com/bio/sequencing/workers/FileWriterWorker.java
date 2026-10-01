@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FileWriterWorker implements Worker{
-    private final StringBuilder pendingFasta = new StringBuilder();
     private  Path output;
     private Port input;
     private BufferedWriter writer;
@@ -39,10 +38,6 @@ public class FileWriterWorker implements Worker{
         Object inputData = input.get();
         if (inputData == null) {
             if (input.isClosed()) {
-                if (pendingFasta.length() > 0) {
-                    writer.write(pendingFasta.toString());
-                    pendingFasta.setLength(0);
-                }
                 writer.close();
                 done = true;
             }
@@ -53,7 +48,11 @@ public class FileWriterWorker implements Worker{
 
         String fasta = sequenceData(sequence, "MAFFT");
 
-        pendingFasta.append(fasta).append(System.lineSeparator());
+        writer.write(">" + sequence.getId());
+        writer.write(System.lineSeparator());
+        writer.write(fasta);
+        writer.write(System.lineSeparator());
+        writer.flush();
     }
 
     protected String sequenceData(Sequence sequence, String workerName) {

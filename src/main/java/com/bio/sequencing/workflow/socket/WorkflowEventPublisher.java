@@ -27,6 +27,19 @@ public class WorkflowEventPublisher {
         );
     }
 
+        public void workflowStarted(String workflowId) {
+                publish(
+                                new WorkflowEvent(
+                                                WorkflowEvent.Type.WORKFLOW_STARTED,
+                                                workflowId,
+                                                null,
+                                                null,
+                                                null,
+                                                "Workflow started"
+                                )
+                );
+        }
+
     public void workerStarted(
             String workflowId,
             String nodeId) {
@@ -61,6 +74,24 @@ public class WorkflowEventPublisher {
         );
     }
 
+        public void fileReady(
+                        String workflowId,
+                        String nodeId,
+                        String downloadUrl,
+                        String filename) {
+
+                publish(
+                                new WorkflowEvent(
+                                                WorkflowEvent.Type.FILE_READY,
+                                                workflowId,
+                                                nodeId,
+                                                null,
+                                                downloadUrl,
+                                                filename
+                                )
+                );
+        }
+
     public void workerCompleted(
             String workflowId,
             String nodeId) {
@@ -92,5 +123,8 @@ public class WorkflowEventPublisher {
                         error
                 )
         );
+    }
+
+    public void workflowFailed(String workflowId, String message) {
     }
 }

@@ -1,25 +1,101 @@
 package com.bio.sequencing.workflow;
 
 import com.bio.sequencing.port.Port;
+import com.bio.sequencing.workflow.socket.WorkflowEventPublisher;
 import com.bio.sequencing.workers.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.scheduling.annotation.Async;
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 
 @Service
 public class WorkflowService {
 
-        @Async
-        public CompletableFuture<WorkflowResponse> create(
+        private static final Logger logger = LoggerFactory.getLogger(WorkflowService.class);
+        private static final Path OUTPUT_FILE =
+                Path.of("/home/maradona/Downloads/checktwo.fasta");
+
+        private final WorkflowEventPublisher eventPublisher;
+        private final Executor jobExecutor;
+
+        public WorkflowService(
+                WorkflowEventPublisher eventPublisher,
+                @Qualifier("workflowTaskExecutor") Executor jobExecutor) {
+                this.eventPublisher = eventPublisher;
+                this.jobExecutor = jobExecutor;
+        }
+//    Executor executor = Executors.newFixedThreadPool(10);
+
+//        public WorkflowResponse create(
+//            WorkflowSchema schema) {
+//
+//        String workflowId = UUID.randomUUID().toString();
+//        eventPublisher.workflowStarted(workflowId);
+//
+//        backgroundExecutor.execute(() -> runWorkflow(workflowId, schema));
+//
+//        return new WorkflowResponse("created", workflowId);
+//    }
+
+    public WorkflowResponse create(
             WorkflowSchema schema) {
 
+        String workflowId = UUID.randomUUID().toString();
+
+        eventPublisher.workflowStarted(workflowId);
+
+        WorkflowGraph graph = createGraph(schema);
+
+        WorkflowExecutor executor =
+                new WorkflowExecutor(graph);
+
+        CompletableFuture.runAsync(() -> {
+
+            try {
+
+                // Background execution
+                executor.execute();
+
+                // Runs after workflow finishes
+                eventPublisher.fileReady(
+                        workflowId,
+                        "FileWriterWorker",
+                        "/api/workflows/files/"
+                                + OUTPUT_FILE.getFileName(),
+                        OUTPUT_FILE.getFileName().toString()
+                );
+
+            } catch (Exception e) {
+
+                eventPublisher.workflowFailed(
+                        workflowId,
+                        e.getMessage()
+                );
+            }
+
+        }, jobExecutor);
+
+        // Runs immediately without waiting for executor.execute()
+        return
+                new WorkflowResponse(
+                        "started",
+                        workflowId
+                );
+
+    }
+
+    private void runWorkflow(String workflowId, WorkflowSchema schema) {
+        try {
         WorkflowGraph graph = createGraph(schema);
 
         WorkflowExecutor executor =
@@ -27,8 +103,14 @@ public class WorkflowService {
 
         executor.execute();
 
-        return CompletableFuture.completedFuture(
-                new WorkflowResponse("created"));
+        eventPublisher.fileReady(
+                workflowId,
+                "FileWriterWorker",
+                "/api/workflows/files/" + OUTPUT_FILE.getFileName(),
+                OUTPUT_FILE.getFileName().toString());
+        } catch (RuntimeException exception) {
+            logger.error("Workflow {} failed", workflowId, exception);
+        }
     }
 
     public WorkflowGraph createGraph(
@@ -98,7 +180,7 @@ public class WorkflowService {
 
         
             case "FileWriterWorker" ->
-                         new FileWriterWorker(Path.of("/home/maradona/Downloads/checktwo.fasta"), ports.firstInput());
+                         new FileWriterWorker(OUTPUT_FILE, ports.firstInput());
 
             default ->
                     throw new IllegalArgumentException(
