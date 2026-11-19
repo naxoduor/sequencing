@@ -205,7 +205,6 @@ public class CufflinksDocumentTask
             saveDocumentTask =
                     new SaveDocumentTask(
                             currentDocument,
-                            null,
                             settings
                                     .getOutputDirectory()
                                     + "/cufflinks-result"

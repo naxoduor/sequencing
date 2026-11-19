@@ -20,7 +20,6 @@ import java.util.concurrent.Executor;
 
 @Service
 public class WorkflowService {
-
         private static final Logger logger = LoggerFactory.getLogger(WorkflowService.class);
         private static final Path OUTPUT_FILE =
                 Path.of("/home/maradona/Downloads/checktwo.fasta");
@@ -34,8 +33,8 @@ public class WorkflowService {
                 this.eventPublisher = eventPublisher;
                 this.jobExecutor = jobExecutor;
         }
-//    Executor executor = Executors.newFixedThreadPool(10);
 
+//    Executor executor = Executors.newFixedThreadPool(10);
 //        public WorkflowResponse create(
 //            WorkflowSchema schema) {
 //
@@ -46,6 +45,9 @@ public class WorkflowService {
 //
 //        return new WorkflowResponse("created", workflowId);
 //    }
+
+
+
 
     public WorkflowResponse create(
             WorkflowSchema schema) {
@@ -60,9 +62,7 @@ public class WorkflowService {
                 new WorkflowExecutor(graph);
 
         CompletableFuture.runAsync(() -> {
-
             try {
-
                 // Background execution
                 executor.execute();
 
@@ -74,8 +74,8 @@ public class WorkflowService {
                                 + OUTPUT_FILE.getFileName(),
                         OUTPUT_FILE.getFileName().toString()
                 );
-
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
 
                 eventPublisher.workflowFailed(
                         workflowId,
@@ -91,7 +91,50 @@ public class WorkflowService {
                         "started",
                         workflowId
                 );
+    }
 
+    public WorkflowResponse createFlow(
+            List<Schema> schemas, List<ConnSchema> connections) {
+
+        String workflowId = UUID.randomUUID().toString();
+
+        eventPublisher.workflowStarted(workflowId);
+
+        WorkflowGraph graph = createNewGraph(schemas, connections);
+
+        WorkflowExecutor executor =
+                new WorkflowExecutor(graph);
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                // Background execution
+                executor.execute();
+
+                // Runs after workflow finishes
+                eventPublisher.fileReady(
+                        workflowId,
+                        "FileWriterWorker",
+                        "/api/workflows/files/"
+                                + OUTPUT_FILE.getFileName(),
+                        OUTPUT_FILE.getFileName().toString()
+                );
+            }
+            catch (Exception e) {
+
+                eventPublisher.workflowFailed(
+                        workflowId,
+                        e.getMessage()
+                );
+            }
+
+        }, jobExecutor);
+
+        // Runs immediately without waiting for executor.execute()
+        return
+                new WorkflowResponse(
+                        "started",
+                        workflowId
+                );
     }
 
     private void runWorkflow(String workflowId, WorkflowSchema schema) {
@@ -113,6 +156,42 @@ public class WorkflowService {
         }
     }
 
+//    public WorkflowGraph createGraph(
+//            List<Schema> schemas) {
+//
+//        Map<String, NodePorts> portsByNode =
+//                new HashMap<>();
+//
+//        for (Schema node : schemas) {
+//            portsByNode.put(node.getId(), createPorts(node));
+//        }
+//
+//        for (ConnectionSchema connection : schema.getConnections()) {
+//            NodePorts source = requireNodePorts(
+//                    portsByNode, connection.getSourceNode());
+//            NodePorts target = requireNodePorts(
+//                    portsByNode, connection.getTargetNode());
+//
+//            Queue<Object> channel = new ConcurrentLinkedQueue<>();
+//            source.output(connection.getSourcePort()).setQueue(channel);
+//            target.input(connection.getTargetPort()).setQueue(channel);
+//        }
+//
+//        Map<String, com.bio.sequencing.workers.Worker> workers =
+//                new HashMap<>();
+//        for (NodeSchema node : schema.getNodes()) {
+//            workers.put(node.getId(), createWorker(
+//                    node,
+//                    requireNodePorts(portsByNode, node.getId())));
+//        }
+//
+//        WorkflowGraph graph = new WorkflowGraph();
+//        for (NodeSchema node : schema.getNodes()) {
+//            graph.addActor(new Actor(node.getId(), workers.get(node.getId())));
+//        }
+//        return graph;
+//    }
+
     public WorkflowGraph createGraph(
             WorkflowSchema schema) {
 
@@ -122,12 +201,8 @@ public class WorkflowService {
         for (NodeSchema node : schema.getNodes()) {
             portsByNode.put(node.getId(), createPorts(node));
         }
-        portsByNode.keySet().forEach(System.out::println);
-        portsByNode.values().forEach(System.out::println);
 
         for (ConnectionSchema connection : schema.getConnections()) {
-            System.out.println("inside connections");
-            System.out.println(connection.getSourceNode());
             NodePorts source = requireNodePorts(
                     portsByNode, connection.getSourceNode());
             NodePorts target = requireNodePorts(
@@ -137,8 +212,6 @@ public class WorkflowService {
             source.output(connection.getSourcePort()).setQueue(channel);
             target.input(connection.getTargetPort()).setQueue(channel);
         }
-        portsByNode.keySet().forEach(System.out::println);
-        portsByNode.values().forEach(System.out::println);
 
         Map<String, com.bio.sequencing.workers.Worker> workers =
                 new HashMap<>();
@@ -155,8 +228,80 @@ public class WorkflowService {
         return graph;
     }
 
+    public WorkflowGraph createNewGraph(
+            List<Schema> schemas, List<ConnSchema> connections) {
+
+        Map<String, NodePorts> portsByNode =
+                new HashMap<>();
+
+        for (Schema node : schemas) {
+            portsByNode.put(node.getId(), createNewPorts(node));
+        }
+
+        for (ConnSchema connection : connections) {
+            NodePorts source = requireNodePorts(
+                    portsByNode, connection.getSource());
+            NodePorts target = requireNodePorts(
+                    portsByNode, connection.getTarget());
+
+            Queue<Object> channel = new ConcurrentLinkedQueue<>();
+            source.output(connection.getSourceHandle()).setQueue(channel);
+            target.input(connection.getTargetHandle()).setQueue(channel);
+        }
+
+        Map<String, com.bio.sequencing.workers.Worker> workers =
+                new HashMap<>();
+        for (Schema node : schemas) {
+            workers.put(node.getId(), createNewWorker(
+                    node,
+                    requireNodePorts(portsByNode, node.getId())));
+        }
+
+        WorkflowGraph graph = new WorkflowGraph();
+        for (Schema node : schemas) {
+            graph.addActor(new Actor(node.getId(), workers.get(node.getId())));
+        }
+        return graph;
+    }
+
     private com.bio.sequencing.workers.Worker createWorker(
             NodeSchema node,
+            NodePorts ports) {
+
+        return switch (node.getType()) {
+
+            case "FASTA_READER", "FastaReaderWorker" ->
+                    new FastaReaderWorker(
+                            Path.of("/home/maradona/Downloads/check.fasta"),
+                            ports.firstOutput());
+
+            case "MAFFT" ->
+                    new MAFFTWorker(ports.firstInput(), ports.firstOutput());
+
+            case "ClustalOWorker" ->
+                    new ClustalOWorker(ports.firstInput(), ports.firstOutput());
+
+            case "ClustalWWorker" ->
+                new ClustalWWorker(ports.firstInput(), ports.firstOutput());
+
+            case "KalignWorker" ->
+                new KalignWorker(ports.firstInput(), ports.firstOutput());
+
+        
+            case "MSA_WRITER" ->
+                         new FileWriterWorker(OUTPUT_FILE, ports.firstInput());
+
+            default ->
+                    throw new IllegalArgumentException(
+                            "Unknown worker: "
+                                    + node.getType()
+                    );
+        };
+    }
+
+
+    private com.bio.sequencing.workers.Worker createNewWorker(
+            Schema node,
             NodePorts ports) {
 
         return switch (node.getType()) {
@@ -173,14 +318,14 @@ public class WorkflowService {
                     new ClustalOWorker(ports.firstInput(), ports.firstOutput());
 
             case "ClustalWWorker" ->
-                new ClustalWWorker(ports.firstInput(), ports.firstOutput());
+                    new ClustalWWorker(ports.firstInput(), ports.firstOutput());
 
             case "KalignWorker" ->
-                new KalignWorker(ports.firstInput(), ports.firstOutput());
+                    new KalignWorker(ports.firstInput(), ports.firstOutput());
 
-        
+
             case "FileWriterWorker" ->
-                         new FileWriterWorker(OUTPUT_FILE, ports.firstInput());
+                    new FileWriterWorker(OUTPUT_FILE, ports.firstInput());
 
             default ->
                     throw new IllegalArgumentException(
@@ -190,13 +335,28 @@ public class WorkflowService {
         };
     }
 
+
+
         private NodePorts createPorts(NodeSchema node) {
                 return new NodePorts(
                                 createPorts(node.getInputs()),
                                 createPorts(node.getOutputs()));
         }
 
-        private Map<String, Port> createPorts(List<PortSchema> schemas) {
+        private NodePorts createNewPorts(Schema node){
+            return new NodePorts(createPorts(node.getInputs()), createPorts(node.getOutputs()));
+        }
+
+    private Map<String, Port> createPorts(String handle) {
+        Map<String, Port> ports = new HashMap<>();
+            Port port = new Port(new ConcurrentLinkedQueue<>());
+            ports.put(handle, port);
+//            ports.putIfAbsent(String.valueOf(index), port);
+        return ports;
+    }
+
+
+    private Map<String, Port> createPorts(List<PortSchema> schemas) {
                 Map<String, Port> ports = new HashMap<>();
             System.out.println(schemas);
                 for (int index = 0; index < schemas.size(); index++) {

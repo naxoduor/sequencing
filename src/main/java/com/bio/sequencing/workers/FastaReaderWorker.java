@@ -30,6 +30,7 @@ public class FastaReaderWorker extends BaseWorker {
     private StringBuilder currentSequence;
 
     private boolean initialized = false;
+
     private boolean done = false;
 
     public FastaReaderWorker(Path fastaFile, Port output) {

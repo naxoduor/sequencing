@@ -164,7 +164,6 @@ public class TrimmomaticDocumentTask
             saveDocumentTask =
                     new SaveDocumentTask(
                             resultDocument,
-                            null,
                             settings
                                     .getOutputPairedRead1()
                     );

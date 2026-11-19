@@ -111,7 +111,7 @@ public class CufflinksSupportTask
             }
 
             result =
-                    cufflinksExecutionTask
+                    (List<AbstractTask>) cufflinksExecutionTask
                             .getResult();
 
             if (result == null) {

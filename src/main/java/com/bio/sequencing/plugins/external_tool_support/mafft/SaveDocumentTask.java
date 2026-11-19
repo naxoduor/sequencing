@@ -5,19 +5,18 @@ public class SaveDocumentTask
 
     private final Document document;
 
-    private final IOAdapterFactory adapterFactory;
+    private IOAdapterFactory adapterFactory = null;
 
     private final String outputPath;
 
     public SaveDocumentTask(
             Document document,
-            IOAdapterFactory adapterFactory,
             String outputPath) {
 
         super("Save document");
 
         this.document = document;
-        this.adapterFactory = adapterFactory;
+        this.adapterFactory = new FastaIOAdapterFactory();
         this.outputPath = outputPath;
     }
 

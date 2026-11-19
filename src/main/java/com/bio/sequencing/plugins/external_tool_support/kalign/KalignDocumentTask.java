@@ -189,7 +189,6 @@ public class KalignDocumentTask extends AbstractTask {
             saveDocumentTask =
                     new SaveDocumentTask(
                             currentDocument,
-                            ioAdapterFactory,
                             settings.getOutputFilePath()
                     );
 

@@ -195,7 +195,6 @@ public class TopHatDocumentTask
             saveDocumentTask =
                     new SaveDocumentTask(
                             resultDocument,
-                            null,
                             topHatResult
                                     .getOutputDirectory()
                     );

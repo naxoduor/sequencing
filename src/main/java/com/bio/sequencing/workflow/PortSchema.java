@@ -31,4 +31,6 @@ public class PortSchema {
     public void setType(String type) {
         this.type = type;
     }
+
+
 }

@@ -284,7 +284,6 @@ public class ClustalWDocumentTask
             saveDocumentTask =
                     new SaveDocumentTask(
                             currentDocument,
-                            ioAdapterFactory,
                             settings
                                     .getOutputFilePath()
                     );

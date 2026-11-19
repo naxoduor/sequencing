@@ -287,7 +287,6 @@ public class MAFFTDocumentTask
             saveDocumentTask =
                     new SaveDocumentTask(
                             currentDocument,
-                            ioAdapterFactory,
                             settings
                                     .getOutputFilePath()
                     );

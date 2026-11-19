@@ -45,7 +45,7 @@ public class Bowtie2ExecutionTask
         return result;
     }
 
-    public Exception getError() {
-        return error;
+    public String getError() {
+        return error.getMessage();
     }
 }

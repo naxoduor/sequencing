@@ -4,7 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-public class BedToolsExecutor {
+public class    BedToolsExecutor {
 
     public BedToolsResult execute(
             BedToolsSettings settings)

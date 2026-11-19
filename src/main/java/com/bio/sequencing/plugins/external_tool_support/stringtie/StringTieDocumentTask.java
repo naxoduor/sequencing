@@ -4,6 +4,7 @@ import com.bio.sequencing.plugins.external_tool_support.cufflinks.BamObject;
 import com.bio.sequencing.plugins.external_tool_support.cufflinks.LoadBamDocumentTask;
 import com.bio.sequencing.plugins.external_tool_support.mafft.AbstractTask;
 import com.bio.sequencing.plugins.external_tool_support.mafft.Document;
+import com.bio.sequencing.plugins.external_tool_support.mafft.ProjectLoader;
 import com.bio.sequencing.plugins.external_tool_support.mafft.SaveDocumentTask;
 
 import java.util.*;

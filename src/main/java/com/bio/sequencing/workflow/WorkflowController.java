@@ -42,8 +42,8 @@ public class WorkflowController {
     @GetMapping("/files/{filename:.+}")
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String filename) {
-                System.out.println("Print the filename");
-                System.out.println(filename);
+        System.out.println("Print the filename");
+        System.out.println(filename);
 
         Path file = OUTPUT_DIRECTORY.resolve(filename).normalize();
         if (!file.startsWith(OUTPUT_DIRECTORY) || !java.nio.file.Files.isRegularFile(file)) {

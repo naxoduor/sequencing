@@ -13,11 +13,13 @@ import java.util.Map;
 @Service
 public class MsaStreamService {
 
-    private final ObjectMapper objectMapper;
+//    private final ObjectMapper objectMapper;
+//
+//    public MsaStreamService(ObjectMapper objectMapper) {
+//        this.objectMapper = objectMapper;
+//    }
 
-    public MsaStreamService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    public MsaStreamService(){}
 
     public void streamFasta(Path fastaFile, OutputStream output)
             throws IOException {
@@ -126,7 +128,7 @@ public class MsaStreamService {
             BufferedWriter writer,
             Map<String, ?> event
     ) throws IOException {
-        writer.write(objectMapper.writeValueAsString(event));
+//        writer.write(objectMapper.writeValueAsString(event));
         writer.newLine();
         writer.flush();
     }
